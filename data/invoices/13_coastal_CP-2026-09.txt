@@ -1,0 +1,22 @@
+Coastal Properties LLC
+500 Brickell Key Dr, Miami, FL 33131
+Tax ID: 59-6789012
+
+INVOICE
+
+Invoice Number: CP-2026-09
+Invoice Date:   2026-09-01
+Due Date:       2026-09-11
+PO Number:      N/A
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Miami Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Office rent - September 2026                 |      1 |   8,500.00 |   8,500.00
+
+Subtotal: 8,500.00
+Tax:      170.00
+Total:    8,670.00
+
+Payment Terms: Net 10

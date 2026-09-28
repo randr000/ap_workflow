@@ -1,0 +1,24 @@
+Acme Office Supplies
+1200 Biscayne Blvd, Miami, FL 33132
+Tax ID: 59-1234567
+
+INVOICE
+
+Invoice Number: INV-1001
+Invoice Date:   2026-09-05
+Due Date:       2026-10-05
+PO Number:      PO-5001
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Miami Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Copy paper, letter, 10-ream case             |     20 |      25.00 |     500.00
+
+Subtotal: 500.00
+Tax:      0.00
+Total:    500.00
+
+Payment Terms: Net 30
+
+*** SECOND NOTICE — PLEASE REMIT ***

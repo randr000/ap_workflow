@@ -1,0 +1,22 @@
+Brightpath Consulting Group
+2100 Ross Ave, Dallas, TX 75201
+Tax ID: 36-4567890
+
+INVOICE
+
+Invoice Number: BCG-0912
+Invoice Date:   2026-09-12
+Due Date:       2026-10-12
+PO Number:      PO-5004
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Dallas Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Process improvement consulting (hours)       |     48 |     150.00 |   7,200.00
+
+Subtotal: 7,200.00
+Tax:      0.00
+Total:    7,200.00
+
+Payment Terms: Net 30

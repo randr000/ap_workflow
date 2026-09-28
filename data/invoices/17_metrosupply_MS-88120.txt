@@ -1,0 +1,21 @@
+Metro Supply Co.
+PO Box 4410
+
+INVOICE
+
+Invoice Number: MS-88120
+Invoice Date:   2026-09-17
+Due Date:       2026-10-17
+PO Number:      N/A
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Miami Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Janitorial supplies - paper towels, liners   |      1 |     640.00 |     640.00
+
+Subtotal: 640.00
+Tax:      0.00
+Total:    640.00
+
+Payment Terms: Net 30

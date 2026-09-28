@@ -1,0 +1,22 @@
+CloudDesk Software
+55 Market St, San Francisco, CA 94105
+Tax ID: 94-8901234
+
+INVOICE
+
+Invoice Number: CD-2026-0915
+Invoice Date:   2026-09-15
+Due Date:       2026-10-15
+PO Number:      N/A
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Miami Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Helpdesk software subscription - 12 seats    |     12 |      40.00 |     480.00
+
+Subtotal: 480.00
+Tax:      0.00
+Total:    480.00
+
+Payment Terms: Net 30

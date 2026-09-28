@@ -1,0 +1,22 @@
+Acme Office Supplies
+1200 Biscayne Blvd, Miami, FL 33132
+Tax ID: 59-1234567
+
+INVOICE
+
+Invoice Number: INV-1002
+Invoice Date:   2026-09-06
+Due Date:       2026-10-06
+PO Number:      PO-5002
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Miami Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Toner cartridge, black, high yield           |     40 |      12.75 |     510.00
+
+Subtotal: 510.00
+Tax:      0.00
+Total:    510.00
+
+Payment Terms: Net 30

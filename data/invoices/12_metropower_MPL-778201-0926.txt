@@ -1,0 +1,22 @@
+Metro Power & Light
+9 Energy Plaza, Miami, FL 33130
+Tax ID: 59-5678901
+
+INVOICE
+
+Invoice Number: MPL-778201-0926
+Invoice Date:   2026-09-10
+Due Date:       2026-09-25
+PO Number:      N/A
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Miami Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Electricity service - Aug 2026, Miami office |      1 |   1,875.40 |   1,875.40
+
+Subtotal: 1,875.40
+Tax:      0.00
+Total:    1,875.40
+
+Payment Terms: Net 15

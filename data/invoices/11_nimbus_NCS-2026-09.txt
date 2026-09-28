@@ -1,0 +1,23 @@
+Nimbus Cloud Services
+400 Cumulus Ave, Seattle, WA 98101
+Tax ID: 91-2345678
+
+INVOICE
+
+Invoice Number: NCS-2026-09
+Invoice Date:   2026-09-20
+Due Date:       2026-10-20
+PO Number:      N/A
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Miami Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Cloud compute usage - September 2026         |      1 |   3,650.00 |   3,650.00
+Object storage - September 2026              |      1 |     600.00 |     600.00
+
+Subtotal: 4,250.00
+Tax:      0.00
+Total:    4,250.00
+
+Payment Terms: Net 30

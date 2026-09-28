@@ -1,0 +1,16 @@
+[
+  {"id": "RCV-7001", "po_number": "PO-5001", "received_date": "2026-09-02",
+   "lines": [{"po_line_number": 1, "description": "Copy paper, letter, 10-ream case", "quantity_received": "20"}]},
+  {"id": "RCV-7002", "po_number": "PO-5002", "received_date": "2026-09-03",
+   "lines": [{"po_line_number": 1, "description": "Toner cartridge, black, high yield", "quantity_received": "40"}]},
+  {"id": "RCV-7003", "po_number": "PO-5003", "received_date": "2026-09-04",
+   "lines": [{"po_line_number": 1, "description": "Ergonomic desk mat", "quantity_received": "20"}]},
+  {"id": "RCV-7004", "po_number": "PO-5005", "received_date": "2026-09-08",
+   "lines": [{"po_line_number": 1, "description": "Industrial shelving unit, 48 in", "quantity_received": "80"}]},
+  {"id": "RCV-7005", "po_number": "PO-5006", "received_date": "2026-09-10",
+   "lines": [
+     {"po_line_number": 1, "description": "Stapler, heavy duty", "quantity_received": "10"},
+     {"po_line_number": 2, "description": "Printer paper, legal, 10-ream case", "quantity_received": "10"},
+     {"po_line_number": 3, "description": "Whiteboard markers, 12-pack", "quantity_received": "20"}
+   ]}
+]

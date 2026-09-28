@@ -1,0 +1,62 @@
+[
+  {
+    "id": "PO-5001", "po_number": "PO-5001", "vendor_id": "V001", "po_date": "2026-08-25",
+    "currency": "USD", "status": "OPEN", "match_type": "THREE_WAY",
+    "lines": [
+      {"line_number": 1, "description": "Copy paper, letter, 10-ream case", "quantity": "20", "unit_price": "25.00", "amount": "500.00",
+       "gl_account": "6100", "department": "Operations", "location": "Miami"}
+    ]
+  },
+  {
+    "id": "PO-5002", "po_number": "PO-5002", "vendor_id": "V001", "po_date": "2026-08-27",
+    "currency": "USD", "status": "OPEN", "match_type": "THREE_WAY",
+    "lines": [
+      {"line_number": 1, "description": "Toner cartridge, black, high yield", "quantity": "40", "unit_price": "12.50", "amount": "500.00",
+       "gl_account": "6100", "department": "Operations", "location": "Miami"}
+    ]
+  },
+  {
+    "id": "PO-5003", "po_number": "PO-5003", "vendor_id": "V001", "po_date": "2026-08-28",
+    "currency": "USD", "status": "OPEN", "match_type": "THREE_WAY",
+    "lines": [
+      {"line_number": 1, "description": "Ergonomic desk mat", "quantity": "20", "unit_price": "25.00", "amount": "500.00",
+       "gl_account": "6100", "department": "Finance", "location": "New York"}
+    ]
+  },
+  {
+    "id": "PO-5004", "po_number": "PO-5004", "vendor_id": "V004", "po_date": "2026-08-15",
+    "currency": "USD", "status": "OPEN", "match_type": "TWO_WAY",
+    "lines": [
+      {"line_number": 1, "description": "Process improvement consulting (hours)", "quantity": "40", "unit_price": "150.00", "amount": "6000.00",
+       "gl_account": "6300", "department": "Operations", "location": "Dallas"}
+    ]
+  },
+  {
+    "id": "PO-5005", "po_number": "PO-5005", "vendor_id": "V007", "po_date": "2026-08-20",
+    "currency": "USD", "status": "OPEN", "match_type": "THREE_WAY",
+    "lines": [
+      {"line_number": 1, "description": "Industrial shelving unit, 48 in", "quantity": "100", "unit_price": "18.00", "amount": "1800.00",
+       "gl_account": "1300", "department": "Operations", "location": "Dallas"}
+    ]
+  },
+  {
+    "id": "PO-5006", "po_number": "PO-5006", "vendor_id": "V001", "po_date": "2026-09-02",
+    "currency": "USD", "status": "OPEN", "match_type": "THREE_WAY",
+    "lines": [
+      {"line_number": 1, "description": "Stapler, heavy duty", "quantity": "10", "unit_price": "18.25", "amount": "182.50",
+       "gl_account": "6100", "department": "Human Resources", "location": "Miami"},
+      {"line_number": 2, "description": "Printer paper, legal, 10-ream case", "quantity": "10", "unit_price": "32.00", "amount": "320.00",
+       "gl_account": "6100", "department": "Human Resources", "location": "Miami"},
+      {"line_number": 3, "description": "Whiteboard markers, 12-pack", "quantity": "20", "unit_price": "12.00", "amount": "240.00",
+       "gl_account": "6100", "department": "Human Resources", "location": "Miami"}
+    ]
+  },
+  {
+    "id": "PO-5007", "po_number": "PO-5007", "vendor_id": "V007", "po_date": "2026-09-05",
+    "currency": "USD", "status": "OPEN", "match_type": "THREE_WAY",
+    "lines": [
+      {"line_number": 1, "description": "Pallet stretch wrap, 18 in roll", "quantity": "120", "unit_price": "18.00", "amount": "2160.00",
+       "gl_account": "1300", "department": "Operations", "location": "Dallas"}
+    ]
+  }
+]

@@ -1,0 +1,23 @@
+Summit Legal Partners LLP
+1 Liberty Plaza, New York, NY 10006
+Tax ID: 13-3456789
+
+INVOICE
+
+Invoice Number: SLP-2026-0918
+Invoice Date:   2026-09-18
+Due Date:       2026-11-02
+PO Number:      N/A
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - New York Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Legal retainer - September 2026              |      1 |  12,000.00 |  12,000.00
+Contract review - vendor agreements (hours)  |     13 |     500.00 |   6,500.00
+
+Subtotal: 18,500.00
+Tax:      0.00
+Total:    18,500.00
+
+Payment Terms: Net 45

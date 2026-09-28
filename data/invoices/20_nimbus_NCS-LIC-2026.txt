@@ -1,0 +1,22 @@
+Nimbus Cloud Services
+400 Cumulus Ave, Seattle, WA 98101
+Tax ID: 91-2345678
+
+INVOICE
+
+Invoice Number: NCS-LIC-2026
+Invoice Date:   2026-09-22
+Due Date:       2026-10-22
+PO Number:      N/A
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Miami Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Annual monitoring software license           |      1 |   2,400.00 |   2,400.00
+
+Subtotal: 2,400.00
+Tax:      0.00
+Total:    2,400.00
+
+Payment Terms: Net 30

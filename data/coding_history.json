@@ -1,0 +1,13 @@
+[
+  {"vendor_id": "V001", "gl_account": "6100", "department": "Operations", "location": "Miami", "count": 14},
+  {"vendor_id": "V002", "gl_account": "6600", "department": "Technology", "location": "Miami", "count": 11},
+  {"vendor_id": "V003", "gl_account": "6300", "department": "Finance", "location": "New York", "count": 6},
+  {"vendor_id": "V004", "gl_account": "6300", "department": "Operations", "location": "Dallas", "count": 4},
+  {"vendor_id": "V005", "gl_account": "6500", "department": "Operations", "location": "Miami", "count": 12},
+  {"vendor_id": "V006", "gl_account": "6700", "department": "Operations", "location": "Miami", "count": 9},
+  {"vendor_id": "V007", "gl_account": "1300", "department": "Operations", "location": "Dallas", "count": 8},
+  {"vendor_id": "V008", "gl_account": "6200", "department": "Technology", "location": "Miami", "count": 10},
+  {"vendor_id": "V009", "gl_account": "6400", "department": "Sales", "location": "New York", "count": 7},
+  {"vendor_id": "V010", "gl_account": "6100", "department": "Operations", "location": "Miami", "count": 3},
+  {"vendor_id": "V012", "gl_account": "6800", "department": "Marketing", "location": "Miami", "count": 5}
+]

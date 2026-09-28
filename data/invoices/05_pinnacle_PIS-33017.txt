@@ -1,0 +1,22 @@
+Pinnacle Industrial Supply
+8800 Freeport Pkwy, Irving, TX 75063
+Tax ID: 75-7890123
+
+INVOICE
+
+Invoice Number: PIS-33017
+Invoice Date:   2026-09-10
+Due Date:       2026-10-10
+PO Number:      PO-5005
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Dallas Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Industrial shelving unit, 48 in              |    100 |      18.00 |   1,800.00
+
+Subtotal: 1,800.00
+Tax:      0.00
+Total:    1,800.00
+
+Payment Terms: Net 30

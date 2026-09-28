@@ -1,0 +1,22 @@
+Horizon Services Group
+77 Water St, New York, NY 10005
+Tax ID: 13-7778889
+
+INVOICE
+
+Invoice Number: HSG-0930
+Invoice Date:   2026-09-14
+Due Date:       2026-10-14
+PO Number:      N/A
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Miami Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Q3 support services - miscellaneous          |      1 |     850.00 |     850.00
+
+Subtotal: 850.00
+Tax:      0.00
+Total:    850.00
+
+Payment Terms: Net 30

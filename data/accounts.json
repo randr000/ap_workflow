@@ -1,0 +1,20 @@
+[
+  {"number": "1000", "name": "Cash", "type": "ASSET", "active": true},
+  {"number": "1100", "name": "Accounts Receivable", "type": "ASSET", "active": true},
+  {"number": "1200", "name": "Prepaid Expenses", "type": "ASSET", "active": true},
+  {"number": "1300", "name": "Inventory", "type": "ASSET", "active": true},
+  {"number": "2000", "name": "Accounts Payable", "type": "LIABILITY", "active": true},
+  {"number": "2100", "name": "Accrued Expenses", "type": "LIABILITY", "active": true},
+  {"number": "3000", "name": "Owner's Equity", "type": "EQUITY", "active": true},
+  {"number": "4000", "name": "Revenue", "type": "REVENUE", "active": true},
+  {"number": "5000", "name": "Cost of Goods Sold", "type": "EXPENSE", "active": true},
+  {"number": "6100", "name": "Office Supplies Expense", "type": "EXPENSE", "active": true},
+  {"number": "6200", "name": "Software Expense", "type": "EXPENSE", "active": true},
+  {"number": "6300", "name": "Professional Services Expense", "type": "EXPENSE", "active": true},
+  {"number": "6400", "name": "Travel Expense", "type": "EXPENSE", "active": true},
+  {"number": "6500", "name": "Utilities Expense", "type": "EXPENSE", "active": true},
+  {"number": "6600", "name": "Cloud Computing Expense", "type": "EXPENSE", "active": true},
+  {"number": "6700", "name": "Rent Expense", "type": "EXPENSE", "active": true},
+  {"number": "6800", "name": "Advertising Expense (retired)", "type": "EXPENSE", "active": false},
+  {"number": "6900", "name": "Marketing Services Expense", "type": "EXPENSE", "active": true}
+]

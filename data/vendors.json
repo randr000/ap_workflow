@@ -1,0 +1,15 @@
+[
+  {"id": "V001", "name": "Acme Office Supplies", "tax_id": "59-1234567", "default_currency": "USD", "default_gl_account": "6100", "default_department": "Operations", "payment_terms": "Net 30", "po_required": true, "active": true},
+  {"id": "V002", "name": "Nimbus Cloud Services", "tax_id": "91-2345678", "default_currency": "USD", "default_gl_account": "6600", "default_department": "Technology", "payment_terms": "Net 30", "po_required": false, "active": true},
+  {"id": "V003", "name": "Summit Legal Partners LLP", "tax_id": "13-3456789", "default_currency": "USD", "default_gl_account": "6300", "default_department": "Finance", "payment_terms": "Net 45", "po_required": false, "active": true},
+  {"id": "V004", "name": "Brightpath Consulting Group", "tax_id": "36-4567890", "default_currency": "USD", "default_gl_account": "6300", "default_department": "Operations", "payment_terms": "Net 30", "po_required": true, "active": true},
+  {"id": "V005", "name": "Metro Power & Light", "tax_id": "59-5678901", "default_currency": "USD", "default_gl_account": "6500", "default_department": "Operations", "payment_terms": "Net 15", "po_required": false, "active": true},
+  {"id": "V006", "name": "Coastal Properties LLC", "tax_id": "59-6789012", "default_currency": "USD", "default_gl_account": "6700", "default_department": "Operations", "payment_terms": "Net 10", "po_required": false, "active": true},
+  {"id": "V007", "name": "Pinnacle Industrial Supply", "tax_id": "75-7890123", "default_currency": "USD", "default_gl_account": "1300", "default_department": "Operations", "payment_terms": "Net 30", "po_required": true, "active": true},
+  {"id": "V008", "name": "CloudDesk Software", "tax_id": "94-8901234", "default_currency": "USD", "default_gl_account": "6200", "default_department": "Technology", "payment_terms": "Net 30", "po_required": false, "active": true},
+  {"id": "V009", "name": "Skyway Travel Management", "tax_id": "13-9012345", "default_currency": "USD", "default_gl_account": "6400", "default_department": "Sales", "payment_terms": "Net 15", "po_required": false, "active": true},
+  {"id": "V010", "name": "Metro Supply Co.", "tax_id": "59-1112223", "default_currency": "USD", "default_gl_account": "6100", "default_department": "Operations", "payment_terms": "Net 30", "po_required": false, "active": true},
+  {"id": "V011", "name": "Metro Supply Company", "tax_id": "75-3334445", "default_currency": "USD", "default_gl_account": "6100", "default_department": "Operations", "payment_terms": "Net 30", "po_required": false, "active": true},
+  {"id": "V012", "name": "Redwood Creative Agency", "tax_id": "36-5556667", "default_currency": "USD", "default_gl_account": "6800", "default_department": "Marketing", "payment_terms": "Net 30", "po_required": false, "active": true},
+  {"id": "V013", "name": "Horizon Services Group", "tax_id": "13-7778889", "default_currency": "USD", "default_gl_account": null, "default_department": null, "payment_terms": "Net 30", "po_required": false, "active": true}
+]

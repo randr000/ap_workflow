@@ -1,0 +1,23 @@
+Skyway Travel Management
+30 Rockefeller Plz, New York, NY 10112
+Tax ID: 13-9012345
+
+INVOICE
+
+Invoice Number: SKY-4471
+Invoice Date:   2026-09-16
+Due Date:       2026-10-01
+PO Number:      N/A
+Currency:       USD
+Bill To:        Harborview Holdings, Inc.
+Ship To:        Harborview Holdings - Chicago Office
+
+Description                                  |    Qty | Unit Price |     Amount
+Client visit - airfare                       |      2 |     420.00 |     840.00
+Client visit - hotel, 2 nights               |      2 |     200.00 |     400.00
+
+Subtotal: 1,240.00
+Tax:      0.00
+Total:    1,240.00
+
+Payment Terms: Net 15
