@@ -15,6 +15,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.domain.approval import DEMO_USERS, User, get_user
+from app.domain.case import IntakeMethod, InvoiceCase
+from app.services.extraction import IntakeError, extraction_from_fields
 from app.services.reporting import dashboard_metrics
 from app.services.workflow_service import (
     APWorkflowService,
@@ -39,6 +41,12 @@ def _user(name: str) -> User:
 class DocumentIn(BaseModel):
     document: str
     source: str = "api"
+
+
+class StructuredIn(BaseModel):
+    user: str
+    invoice: dict
+    source: str = "api:structured"
 
 
 class ActionIn(BaseModel):
@@ -67,11 +75,16 @@ def health(svc: APWorkflowService = Svc):
     return {"status": "ok", "ai_provider": svc.provider.name}
 
 
+def _summary(c: InvoiceCase) -> dict:
+    step = c.approval_route.next_step if c.approval_route and c.status == "PENDING_APPROVAL" else None
+    return {"id": c.id, "invoice_number": c.invoice.invoice_number, "vendor": c.invoice.vendor_name,
+            "total": str(c.invoice.total), "status": c.status, "next_approver": step.role if step else None,
+            "open_exceptions": [e.type for e in c.open_exceptions]}
+
+
 @router.get("/invoices")
 def list_invoices(svc: APWorkflowService = Svc):
-    return [{"id": c.id, "invoice_number": c.invoice.invoice_number, "vendor": c.invoice.vendor_name,
-             "total": str(c.invoice.total), "status": c.status,
-             "open_exceptions": [e.type for e in c.open_exceptions]} for c in svc.list()]
+    return [_summary(c) for c in svc.list()]
 
 
 @router.get("/invoices/{invoice_id}")
@@ -82,6 +95,26 @@ def get_invoice(invoice_id: str, svc: APWorkflowService = Svc):
 @router.post("/invoices", status_code=201)
 def process_invoice(body: DocumentIn, svc: APWorkflowService = Svc):
     return svc.process_document(body.document, body.source).model_dump(mode="json")
+
+
+@router.post("/invoices/structured", status_code=201)
+def process_structured(body: StructuredIn, svc: APWorkflowService = Svc):
+    """Invoice fields as JSON (no AI extraction). Missing amounts/subtotal/total are computed."""
+    user = _user(body.user)
+    try:
+        extraction = extraction_from_fields(body.invoice)
+    except IntakeError as e:
+        raise HTTPException(422, str(e))
+    return svc.process_structured(extraction, entered_by=user.name, source=body.source,
+                                  intake=IntakeMethod.STRUCTURED_UPLOAD).model_dump(mode="json")
+
+
+@router.get("/inbox")
+def inbox(user: str, svc: APWorkflowService = Svc):
+    """Invoices waiting for this user's role(s), plus validated invoices ready to post if they can post."""
+    u = _user(user)
+    return {"user": u.name, "roles": u.roles, "waiting": [_summary(c) for c in svc.pending_for(u)],
+            "ready_to_post": [_summary(c) for c in svc.ready_to_post()] if u.can_post else []}
 
 
 @router.post("/invoices/{invoice_id}/approve")

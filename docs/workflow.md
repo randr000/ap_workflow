@@ -32,12 +32,14 @@ Allowed transitions (`app/domain/workflow.py`):
 
 Anything else raises `InvalidTransitionError`. Invoices don't have to visit every state. Non-PO invoices skip `MATCHED`, and clean invoices skip `EXCEPTION` and `PENDING_APPROVAL`.
 
-## Processing pipeline (`APWorkflowService.process_document`)
+## Processing pipeline
+
+Invoices enter one of two ways: `process_document` (document text read by the AI) or `process_structured` (details typed into the form or uploaded as JSON). Only step 2 differs. For structured input, step 2 is the person's entry, recorded as a HUMAN audit event, and `EXTRACTED` means "details captured".
 
 | # | Step | Who | Output | Can raise |
 |---|---|---|---|---|
 | 1 | Receive | SYSTEM | invoice id, audit event | — |
-| 2 | Extract | **AI** | `InvoiceExtraction` (schema-validated) | extraction failure (no case created) |
+| 2 | Extract — or accept typed / JSON details | **AI** — or HUMAN | `InvoiceExtraction` (schema-validated) | extraction failure (no case created) |
 | 3 | Identify vendor | SYSTEM (+ AI suggestion) | `VendorMatch` | `VENDOR_AMBIGUITY` (halts) |
 | 4 | Arithmetic check | SYSTEM | lines × price, Σ lines = subtotal, subtotal + tax = total | `INVOICE_ARITHMETIC_ERROR` |
 | 5 | Classify | **AI** | `ClassificationProposal` (GL, dept, location, confidence, reason) | — |
@@ -50,6 +52,18 @@ Anything else raises `InvalidTransitionError`. Invoices don't have to visit ever
 | 12 | Propose JE | SYSTEM | `JournalEntry` (PROPOSED) | — |
 | 13a | Auto-approve + validate | SYSTEM | APPROVED → VALIDATED | validation failure (posting blocked) |
 | 13b | …or wait for humans | — | PENDING_APPROVAL | — |
+
+## Approval route: invoices travel through roles
+
+The route is an ordered list of steps (AP triage first, financial authority last). Only the **next** pending step can be approved, and only by a user holding that role. So an invoice moves from inbox to inbox:
+
+```text
+✓ Received → ▶ Procurement Manager → ○ Department Manager → ○ Post        (waiting for Procurement)
+✓ Received → ✅ Procurement Manager → ▶ Department Manager → ○ Post        (Procurement approved)
+✓ Received → ✅ Procurement Manager → ✅ Department Manager → ▶ Post       (validated, ready to post)
+```
+
+`APWorkflowService.pending_for(user)` returns a role's inbox: invoices in PENDING_APPROVAL whose next step belongs to one of the user's roles. `ready_to_post()` returns VALIDATED invoices for the roles that can post. The UI's **Approval Inbox** and `GET /inbox?user=…` are built on these. Each demo persona holds one role (the AP Specialist covers both AP queues), so a Controller cannot approve a Department Manager step.
 
 ## Human actions
 

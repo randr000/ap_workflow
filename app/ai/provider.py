@@ -42,14 +42,34 @@ class LLMProvider(Protocol):
     def explain_exception(self, exception: ExceptionRecord) -> str: ...
 
 
-def create_provider(settings: Settings) -> LLMProvider:
-    """Mock (deterministic) by default. The OpenAI-compatible provider is used only
-    when explicitly configured AND an API key is present."""
+PROVIDER_LABELS = {
+    "mock": "Mock (deterministic demo)",
+    "ollama": "Ollama (local / LAN model)",
+    "openai": "OpenAI-compatible API",
+}
+
+
+def create_provider(settings: Settings, name: str | None = None, *, ollama_base_url: str | None = None,
+                    ollama_model: str | None = None) -> LLMProvider:
+    """Build the provider named by `name` (default: settings.llm_provider).
+
+    mock    deterministic, no network — the default demo mode
+    ollama  Ollama's native API at settings.ollama_base_url (can be another machine on the LAN)
+    openai  any OpenAI-compatible endpoint; used only when an API key is configured, else mock
+    """
     from app.ai.mock_provider import MockLLMProvider
 
-    if settings.llm_provider == "openai" and settings.openai_api_key:
+    name = (name or settings.llm_provider).lower()
+    if name == "ollama":
+        from app.ai.ollama_provider import OllamaProvider
+
+        return OllamaProvider(base_url=ollama_base_url or settings.ollama_base_url,
+                              model=ollama_model or settings.ollama_model,
+                              timeout=settings.llm_timeout_seconds)
+    if name == "openai" and settings.openai_api_key:
         from app.ai.openai_provider import OpenAICompatibleProvider
 
         return OpenAICompatibleProvider(
-            api_key=settings.openai_api_key, base_url=settings.openai_base_url, model=settings.openai_model)
+            api_key=settings.openai_api_key, base_url=settings.openai_base_url, model=settings.openai_model,
+            timeout=settings.llm_timeout_seconds)
     return MockLLMProvider()

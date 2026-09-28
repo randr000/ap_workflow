@@ -1,6 +1,6 @@
 # Demo Script (~3 minutes)
 
-**Setup (before the call):** `streamlit run streamlit_app.py`, then click **Reset demo data** in the sidebar so the state is fresh and deterministic. Keep **Acting as** set to *Dana Brooks (AP Specialist)*.
+**Setup (before the call):** `streamlit run streamlit_app.py`, then click **Reset demo data** in the sidebar so the state is fresh and deterministic. Keep **Your role** set to *AP Specialist* (Dana Brooks).
 
 ---
 
@@ -38,17 +38,17 @@ Select `AP-0003 · INV-1004 · $540.00`.
 
 Show the **PRICE_VARIANCE** card: evidence, the AI's one-line explanation, and the recommended action. Show the route: **Procurement Manager**.
 
-Click **Approve as Procurement Manager** while still acting as Dana.
+Click **Approve as Procurement Manager** while still signed in as the AP Specialist.
 
 > "Blocked. Dana is an AP Specialist, not Procurement. Permissions are enforced by the service, not by hiding buttons."
 
-Switch **Acting as** to *Priya Shah (Procurement Manager)*, add a comment ("Price increase accepted"), then **Approve**.
+Switch **Your role** to *Procurement Manager* (Priya Shah) and open **Approval Inbox**. AP-0003 is waiting there, and its route shows `▶ Procurement Manager → ○ Post`. Add a comment ("Price increase accepted"), then **Approve as Procurement Manager**.
 
 > "Now it's approved, the exception is resolved with Priya's name on it, and the entry is validated and ready to post."
 
 ## 1:55 — Duplicate invoice (35 s)
 
-Switch back to *Dana*. Select `AP-0007 · INV-1001 (resubmitted)`.
+Switch **Your role** back to *AP Specialist*, open **Invoice Processing**, and select `AP-0007 · INV-1001 (resubmitted)`.
 
 > "Same vendor, same invoice number, same amount, same PO as the one we just posted. It's a HIGH-confidence duplicate."
 
@@ -85,5 +85,8 @@ Close on **Audit Trail**, filtered to `AP-0003`: SYSTEM, AI and HUMAN events in 
 | Ambiguous vendor | `AP-0017` Metro Supply | Two vendor-master records share a name and the invoice has no tax ID. The AI's suggestion is shown but not accepted. |
 | Human-review band | `AP-0020` Nimbus | History says cloud, the description says software license. 80% confidence goes to AP Review without raising an exception. |
 | High value | `AP-0009` Summit Legal | $18,500 needs the Controller (*Elena Torres*). |
+| Travel through roles | Approval Inbox | As *Procurement Manager*, approve `AP-0004`. Switch to *Department Manager*: it's now in that inbox with Procurement's ✅ on the route. |
+| Enter an invoice | New Invoice → Enter details | Pick Acme Office Supplies and PO-5003 (lines pre-fill), change the price to 27.00, submit. A price variance goes to Procurement. |
+| Local model | Sidebar → AI provider → Ollama | Point it at the Ollama machine and upload `data/samples/sample_invoice.txt`. The model extracts the invoice, and the same controls apply. |
 | Benchmark | Dashboard → *Synthetic benchmark* | 100 generated invoices. Clearly labelled as synthetic. |
 | CLI | `python -m demo.scenarios` | All 10 scenarios pass deterministically. |

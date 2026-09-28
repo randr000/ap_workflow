@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from pydantic import ValidationError
+
 from app.ai.provider import AIProviderError, LLMProvider, create_provider
 from app.config import Settings, load_settings
 from app.db.database import init_db, make_engine, make_session_factory
@@ -19,9 +21,9 @@ from app.db.repository import Repository
 from app.db.seed import seed_repository
 from app.domain.accounting import ClassificationProposal, JournalEntryStatus, ValidationReport
 from app.domain.approval import ApproverRole, StepStatus, User
-from app.domain.case import InvoiceCase
+from app.domain.case import IntakeMethod, InvoiceCase
 from app.domain.exception import ExceptionStatus, ExceptionType
-from app.domain.invoice import DuplicateConfidence
+from app.domain.invoice import DuplicateConfidence, InvoiceExtraction
 from app.domain.vendor import VendorMatchStatus
 from app.domain.workflow import (
     TERMINAL_STATES,
@@ -41,7 +43,7 @@ from app.services.classification import (
 )
 from app.services.duplicate_detection import find_duplicates
 from app.services.exceptions import DUPLICATE_SEVERITY, new_exception
-from app.services.extraction import build_invoice, extract
+from app.services.extraction import build_invoice, extract, render_details
 from app.services.journal_entries import build_journal_entry
 from app.services.ledger import InternalLedger, LedgerGateway
 from app.services.matching import match_invoice
@@ -116,6 +118,7 @@ class APWorkflowService:
     # ------------------------------------------------------------- processing
 
     def process_document(self, document: str, source: str = "upload") -> InvoiceCase:
+        """Intake path 1: document text -> AI extraction -> full pipeline."""
         invoice_id = self.repo.next_invoice_id()
         self._audit(invoice_id, ActorType.SYSTEM, "Intake", "Invoice received", source=source)
 
@@ -127,10 +130,33 @@ class APWorkflowService:
         self._audit(invoice_id, ActorType.AI, self.provider.name, "Invoice extracted",
                     vendor=extraction.vendor_name, invoice_number=extraction.invoice_number,
                     total=str(extraction.total), confidence=extraction.confidence)
+        return self._process(invoice_id, extraction, document, source, IntakeMethod.AI_EXTRACTION)
 
+    def process_structured(self, extraction: InvoiceExtraction, entered_by: str, source: str = "manual",
+                           intake: IntakeMethod = IntakeMethod.MANUAL_ENTRY) -> InvoiceCase:
+        """Intake path 2: invoice details typed in by a user or uploaded as JSON.
+
+        No AI extraction happens, but every downstream control runs exactly as for a document:
+        arithmetic, vendor identification, AI coding + master-data checks, PO matching,
+        duplicates, routing and validation."""
+        try:
+            extraction = InvoiceExtraction.model_validate(extraction.model_dump())
+        except ValidationError as e:
+            raise WorkflowError(f"Invalid invoice details: {e.error_count()} error(s)") from e
+        invoice_id = self.repo.next_invoice_id()
+        self._audit(invoice_id, ActorType.SYSTEM, "Intake", "Invoice received", source=source)
+        action = ("Invoice details entered manually" if intake == IntakeMethod.MANUAL_ENTRY
+                  else "Structured invoice uploaded")
+        self._audit(invoice_id, ActorType.HUMAN, entered_by, action, vendor=extraction.vendor_name,
+                    invoice_number=extraction.invoice_number, total=str(extraction.total))
+        return self._process(invoice_id, extraction, render_details(extraction), source, intake)
+
+    def _process(self, invoice_id: str, extraction: InvoiceExtraction, document: str, source: str,
+                 intake: IntakeMethod) -> InvoiceCase:
         vendor_match = identify_vendor(extraction, self.reference, self.provider)
         invoice = build_invoice(extraction, invoice_id, vendor_match.vendor_id, source)
-        case = InvoiceCase(invoice=invoice, document=document, extraction=extraction, vendor_match=vendor_match)
+        case = InvoiceCase(invoice=invoice, document=document, extraction=extraction, vendor_match=vendor_match,
+                           intake=intake, ai_provider=self.provider.name)
         self._transition(case, WorkflowState.EXTRACTED)
 
         if vendor_match.ai_suggestion:
@@ -421,6 +447,15 @@ class APWorkflowService:
 
     def list(self) -> list[InvoiceCase]:
         return self.repo.list_cases()
+
+    def pending_for(self, user: User) -> list[InvoiceCase]:
+        """The user's approval inbox: invoices whose *next* approval step belongs to one of their roles."""
+        return [c for c in self.list()
+                if c.status == WorkflowState.PENDING_APPROVAL and c.approval_route
+                and c.approval_route.next_step and c.approval_route.next_step.role in user.roles]
+
+    def ready_to_post(self) -> list[InvoiceCase]:
+        return [c for c in self.list() if c.status == WorkflowState.VALIDATED]
 
 
 def create_workflow_service(database_url: str | None = None, reset: bool = False,

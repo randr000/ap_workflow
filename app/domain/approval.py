@@ -68,14 +68,18 @@ class User(BaseModel):
     def label(self) -> str:
         return f"{self.name} ({self.title})"
 
+    @property
+    def role_label(self) -> str:
+        return f"{self.title} — {self.name}"
 
+
+# One persona per role. Each persona can only act on approval steps for its own role(s).
 DEMO_USERS: list[User] = [
     User(name="Dana Brooks", title="AP Specialist",
          roles=[ApproverRole.AP_REVIEW_QUEUE, ApproverRole.AP_EXCEPTION_QUEUE], can_post=True),
     User(name="Priya Shah", title="Procurement Manager", roles=[ApproverRole.PROCUREMENT_MANAGER]),
     User(name="Marcus Lee", title="Department Manager", roles=[ApproverRole.DEPARTMENT_MANAGER]),
-    User(name="Elena Torres", title="Controller",
-         roles=[ApproverRole.CONTROLLER, ApproverRole.DEPARTMENT_MANAGER], can_post=True),
+    User(name="Elena Torres", title="Controller", roles=[ApproverRole.CONTROLLER], can_post=True),
 ]
 
 

@@ -85,10 +85,11 @@ def keyword_gl(descriptions: list[str]) -> str | None:
 
 
 def location_from_ship_to(ship_to: str | None) -> str | None:
-    if not ship_to:
+    """'Harborview Holdings - Chicago Office' -> 'Chicago'; 'Chicago Office' / 'Chicago' -> 'Chicago'."""
+    if not ship_to or not ship_to.strip():
         return None
-    m = re.search(r"-\s*([A-Za-z .]+?)\s+Office\b", ship_to)
-    return m.group(1).strip() if m else None
+    tail = ship_to.rsplit(" - ", 1)[-1].strip()
+    return re.sub(r"\s+Office$", "", tail, flags=re.IGNORECASE).strip() or None
 
 
 class MockLLMProvider:

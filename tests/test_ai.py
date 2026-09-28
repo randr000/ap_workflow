@@ -196,3 +196,98 @@ def test_openai_provider_rejects_invalid_output():
 def _ctx():
     from app.domain.accounting import ClassificationContext
     return ClassificationContext(vendor_id="V002", vendor_name="Nimbus", descriptions=["x"])
+
+
+# --- Ollama provider (simulated Ollama server) -------------------------------
+
+from app.ai.ollama_provider import OllamaProvider  # noqa: E402
+
+EXTRACTED = {"vendor_name": "Acme Office Supplies", "vendor_tax_id": "59-1234567", "invoice_number": "INV-9",
+             "invoice_date": "2026-09-25", "due_date": None, "po_number": "N/A", "currency": "USD",
+             "ship_to": None, "subtotal": 540.0, "tax": 0, "total": 540.0, "confidence": 0.93,
+             "lines": [{"description": "Ergonomic desk mat", "quantity": 20, "unit_price": 27.0, "amount": 540.0}]}
+
+
+def _ollama(handler, model="llama3.1") -> OllamaProvider:
+    return OllamaProvider("http://192.168.1.50:11434/", model, transport=httpx.MockTransport(handler))
+
+
+def _chat_reply(content, seen: list | None = None):
+    def handler(request: httpx.Request) -> httpx.Response:
+        if seen is not None:
+            seen.append((request.url.path, json.loads(request.content)))
+        return httpx.Response(200, json={"message": {"role": "assistant", "content": json.dumps(content)}})
+    return handler
+
+
+def test_ollama_uses_native_chat_with_json_schema():
+    seen = []
+    ext = _ollama(_chat_reply(EXTRACTED, seen)).extract_invoice("invoice text")
+    path, body = seen[0]
+    assert path == "/api/chat"
+    assert body["model"] == "llama3.1" and body["stream"] is False
+    assert body["options"]["temperature"] == 0
+    assert body["format"]["type"] == "object" and "lines" in body["format"]["properties"]
+    assert body["messages"][-1]["content"].endswith("invoice text")
+    assert ext.total == Decimal("540.0") and ext.po_number is None  # "N/A" normalized to null
+
+
+def test_ollama_output_is_schema_validated():
+    with pytest.raises(AIProviderError, match="schema validation"):
+        _ollama(_chat_reply({"vendor_name": "Acme"})).extract_invoice("x")
+    bad_json = lambda r: httpx.Response(200, json={"message": {"content": "not json"}})  # noqa: E731
+    with pytest.raises(AIProviderError):
+        _ollama(bad_json).extract_invoice("x")
+
+
+def test_ollama_classification_normalizes_percent_confidence(reference):
+    reply = {"gl_account": "6600", "department": "Technology", "location": "Miami",
+             "confidence": 95, "reason": "Cloud usage"}
+    p = _ollama(_chat_reply(reply)).classify_invoice(None, _ctx())
+    assert p.confidence == 0.95 and p.source == "AI"
+    with pytest.raises(AIProviderError):  # 1.7 is not a plausible percentage -> rejected, not rescaled
+        _ollama(_chat_reply(reply | {"confidence": 1.7})).classify_invoice(None, _ctx())
+
+
+def test_ollama_errors_are_explicit():
+    def refused(request):
+        raise httpx.ConnectError("connection refused", request=request)
+    with pytest.raises(AIProviderError, match="Cannot reach Ollama at http://192.168.1.50:11434"):
+        _ollama(refused).extract_invoice("x")
+    missing = lambda r: httpx.Response(404, json={"error": "model not found"})  # noqa: E731
+    with pytest.raises(AIProviderError, match="ollama pull llama3.1"):
+        _ollama(missing).extract_invoice("x")
+
+
+def test_ollama_check_connection():
+    tags = lambda r: httpx.Response(200, json={"models": [{"name": "llama3.1:latest"}, {"name": "qwen2.5:7b"}]})  # noqa: E731
+    ok, msg, models = _ollama(tags).check_connection()
+    assert ok and models == ["llama3.1:latest", "qwen2.5:7b"]
+    ok, msg, _ = _ollama(tags, model="mistral").check_connection()
+    assert not ok and "ollama pull mistral" in msg
+
+    def refused(request):
+        raise httpx.ConnectError("refused", request=request)
+    ok, msg, models = _ollama(refused).check_connection()
+    assert not ok and models == [] and "Cannot reach" in msg
+
+
+def test_create_provider_ollama():
+    s = Settings(llm_provider="ollama", ollama_base_url="http://10.0.0.7:11434", ollama_model="qwen2.5:7b")
+    p = create_provider(s)
+    assert isinstance(p, OllamaProvider) and p.base_url == "http://10.0.0.7:11434" and p.model == "qwen2.5:7b"
+    override = create_provider(Settings(), "ollama", ollama_base_url="http://host:11434", ollama_model="llama3.2")
+    assert override.name == "Ollama (llama3.2)"
+    assert isinstance(create_provider(s, "mock"), MockLLMProvider)
+
+
+def test_ship_to_parsing_accepts_plain_city():
+    assert location_from_ship_to("Chicago") == "Chicago"
+    assert location_from_ship_to("Chicago Office") == "Chicago"
+
+
+def test_ollama_provider_has_no_path_to_state():
+    """Like the mock, the Ollama provider only returns proposals (plus a read-only connection check)."""
+    public = {n for n in dir(_ollama(lambda r: httpx.Response(200))) if not n.startswith("_")}
+    assert public == {"name", "model", "base_url", "extract_invoice", "suggest_vendor", "classify_invoice",
+                      "explain_exception", "list_models", "check_connection"}

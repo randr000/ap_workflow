@@ -1,0 +1,18 @@
+{
+  "vendor_name": "Acme Office Supplies",
+  "vendor_tax_id": "59-1234567",
+  "invoice_number": "INV-2002",
+  "invoice_date": "2026-09-26",
+  "due_date": "2026-10-26",
+  "po_number": "PO-5003",
+  "currency": "USD",
+  "ship_to": "New York",
+  "tax": "0.00",
+  "lines": [
+    {
+      "description": "Ergonomic desk mat",
+      "quantity": 20,
+      "unit_price": "27.00"
+    }
+  ]
+}

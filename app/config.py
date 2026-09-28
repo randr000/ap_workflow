@@ -68,6 +68,9 @@ class Settings:
     openai_api_key: str | None = None
     openai_base_url: str = "https://api.openai.com/v1"
     openai_model: str = "gpt-4o-mini"
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.1"
+    llm_timeout_seconds: float = 180.0
     tolerances: Tolerances = field(default_factory=Tolerances)
     confidence: ConfidenceThresholds = field(default_factory=ConfidenceThresholds)
     approvals: ApprovalThresholds = field(default_factory=ApprovalThresholds)
@@ -82,6 +85,9 @@ def load_settings() -> Settings:
         openai_api_key=os.getenv("OPENAI_API_KEY") or None,
         openai_base_url=_env("OPENAI_BASE_URL", "https://api.openai.com/v1"),
         openai_model=_env("OPENAI_MODEL", "gpt-4o-mini"),
+        ollama_base_url=_env("OLLAMA_BASE_URL", "http://localhost:11434"),
+        ollama_model=_env("OLLAMA_MODEL", "llama3.1"),
+        llm_timeout_seconds=float(_env("AP_LLM_TIMEOUT", "180")),
         tolerances=Tolerances(
             quantity=Decimal(_env("AP_QUANTITY_TOLERANCE", "0")),
             price_amount=Decimal(_env("AP_PRICE_TOLERANCE_AMOUNT", "25.00")),

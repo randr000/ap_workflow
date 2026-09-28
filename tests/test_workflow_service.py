@@ -212,3 +212,91 @@ def test_arithmetic_error_detected(svc):
     assert ExceptionType.INVOICE_ARITHMETIC_ERROR in types(case)
     with pytest.raises(WorkflowError):
         svc.approve(case.id, AP)
+
+
+# --- structured intake (manual entry / JSON upload) --------------------------
+
+from app.domain.case import IntakeMethod  # noqa: E402
+from app.services.extraction import IntakeError, extraction_from_fields  # noqa: E402
+
+
+class NoExtractionProvider(MockLLMProvider):
+    """Proves structured intake never asks the AI to extract."""
+
+    def extract_invoice(self, document):
+        raise AssertionError("AI extraction must not run for manually entered invoices")
+
+
+def manual(**kw):
+    base = {"vendor_name": "Acme Office Supplies", "vendor_tax_id": "59-1234567", "invoice_number": "INV-5555",
+            "invoice_date": "2026-09-25", "po_number": "PO-5003",
+            "lines": [{"description": "Ergonomic desk mat", "quantity": 20, "unit_price": "27.00"}]}
+    base.update(kw)
+    return extraction_from_fields(base)
+
+
+def test_manual_entry_skips_ai_extraction_but_runs_every_control():
+    svc = create_workflow_service(IN_MEMORY_URL, reset=True, settings=Settings(), provider=NoExtractionProvider())
+    case = svc.process_structured(manual(), entered_by="Dana Brooks")
+    assert case.intake == IntakeMethod.MANUAL_ENTRY
+    assert case.extraction.total == Decimal("540.00")  # computed from the lines
+    assert types(case) == {ExceptionType.PRICE_VARIANCE}  # PO matching still applies
+    assert case.classification.gl_account == "6100"  # AI coding still proposes
+    actions = [(e.actor_type, e.action) for e in svc.repo.list_audit(case.id)]
+    assert (ActorType.HUMAN, "Invoice details entered manually") in actions
+    assert not any(a == "Invoice extracted" for _, a in actions)
+
+
+def test_structured_invoice_that_does_not_foot_is_flagged(svc):
+    case = svc.process_structured(manual(total="600.00"), entered_by="Dana Brooks",
+                                  intake=IntakeMethod.STRUCTURED_UPLOAD)
+    assert ExceptionType.INVOICE_ARITHMETIC_ERROR in types(case)
+    assert case.intake == IntakeMethod.STRUCTURED_UPLOAD
+
+
+def test_manual_ship_to_city_is_validated(svc):
+    case = svc.process_structured(manual(vendor_name="Skyway Travel Management", vendor_tax_id=None,
+                                         invoice_number="SKY-1", po_number=None, ship_to="Chicago",
+                                         lines=[{"description": "Client visit - airfare", "unit_price": "420"}]),
+                                  entered_by="Dana Brooks")
+    assert types(case) == {ExceptionType.INVALID_DIMENSION}
+
+
+def test_extraction_from_fields_rejects_bad_input():
+    with pytest.raises(IntakeError, match="line item"):
+        extraction_from_fields({"vendor_name": "Acme", "invoice_number": "1", "invoice_date": "2026-09-01"})
+    with pytest.raises(IntakeError, match="not a valid number"):
+        manual(lines=[{"description": "x", "quantity": 1, "unit_price": "twelve"}])
+    with pytest.raises(IntakeError, match="invoice_date"):
+        manual(invoice_date="next tuesday")
+    assert manual(po_number="").po_number is None
+
+
+# --- role-based approval inbox ------------------------------------------------
+
+def test_invoice_travels_through_role_inboxes(svc):
+    case = svc.process_document(doc(vendor_name="Brightpath Consulting Group", tax_id="36-4567890",
+                                    invoice_number="BCG-0912", po_number="PO-5004",
+                                    lines=[("Process improvement consulting (hours)", "48", "150.00")]))
+
+    def inboxes():
+        return {u.name: [c.id for c in svc.pending_for(u)] for u in (AP, PROCUREMENT, DEPT_MGR, CONTROLLER)}
+
+    assert inboxes() == {AP.name: [], PROCUREMENT.name: [case.id], DEPT_MGR.name: [], CONTROLLER.name: []}
+    svc.approve(case.id, PROCUREMENT)
+    assert inboxes() == {AP.name: [], PROCUREMENT.name: [], DEPT_MGR.name: [case.id], CONTROLLER.name: []}
+    svc.approve(case.id, DEPT_MGR)
+    assert all(ids == [] for ids in inboxes().values())
+    assert [c.id for c in svc.ready_to_post()] == [case.id]
+
+
+def test_each_role_can_only_act_on_its_own_step(svc):
+    case = svc.process_document(doc(vendor_name="Nimbus Cloud Services", tax_id="91-2345678",
+                                    invoice_number="NCS-1", po_number=None,
+                                    lines=[("Cloud compute usage", "1", "4250.00")]))
+    assert [s.role for s in case.approval_route.steps] == [ApproverRole.DEPARTMENT_MANAGER]
+    with pytest.raises(WorkflowError, match="not authorized"):
+        svc.approve(case.id, CONTROLLER)  # the Controller role no longer doubles as Department Manager
+    with pytest.raises(WorkflowError, match="not authorized"):
+        svc.reject(case.id, PROCUREMENT, "not mine")
+    assert svc.reject(case.id, DEPT_MGR, "Not budgeted").status == S.REJECTED

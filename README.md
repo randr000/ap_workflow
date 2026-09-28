@@ -39,13 +39,13 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 
 pip install -e .
 
-pytest                             # 117 tests: unit + integration + UI smoke test
+pytest                             # 134 tests: unit + integration + UI smoke tests
 python -m demo.scenarios           # 10 headline scenarios, 20-invoice dataset
 python -m demo.benchmark           # 100-invoice synthetic benchmark
 streamlit run streamlit_app.py     # the demo UI
 ```
 
-No API key is needed. By default the system runs in **deterministic demo mode**: a mock AI provider stands in for the LLM, so every run produces the same results.
+No API key is needed. By default the system runs in **deterministic demo mode**: a mock AI provider stands in for the LLM, so every run produces the same results. To use a real model, point it at [Ollama](#running-with-ollama) (on this machine or another one on your network) or any OpenAI-compatible API.
 
 ---
 
@@ -85,7 +85,9 @@ How this is enforced in code:
 
 ## Key features
 
+- **Three ways to bring in an invoice.** Type the details into a form (lines pre-fill from the PO), upload `.txt` invoices (read by the AI) or `.json` files (structured fields), or paste invoice text. Every path goes through the same deterministic controls. No OCR yet.
 - **Invoice extraction.** Structured JSON output, validated with Pydantic. Money is always `Decimal`.
+- **Pluggable AI.** Deterministic mock (default), **Ollama** (local or LAN model, JSON-schema structured outputs), or any OpenAI-compatible API. Switch in the sidebar or with `AP_LLM_PROVIDER`.
 - **Vendor identification.** Exact tax ID, then exact normalized name, then fuzzy match. An AI vendor suggestion is recorded but never auto-accepted when the match is ambiguous.
 - **AI GL classification** with confidence and reason, based on PO coding, vendor history, vendor defaults and description keywords.
 - **Dimension classification** (department, location), validated against master data.
@@ -97,7 +99,8 @@ How this is enforced in code:
 - **Approval routing.** Auto-approval under $1,000, Department Manager, Controller at $10,000 and above, Procurement for PO mismatches, and AP queues for duplicates and low confidence. Every route explains why it was chosen.
 - **Journal-entry generation.** Expense lines carry department and location; tax gets its own line; AP is credited.
 - **Accounting validation** in 8 rules. Any failure means **POSTING BLOCKED**.
-- **Human-in-the-loop approval** with role-based permissions, sequential approval steps, coding correction and duplicate dismissal (a reason is required).
+- **Role-based approval route.** Each invoice travels through its approvers one role at a time. Pick a role in the sidebar and its **Approval Inbox** shows what's waiting, why it was routed there, and where the invoice sits on its route; approve or reject it and it moves to the next role (or to "ready to post").
+- **Human-in-the-loop controls** with role-based permissions, coding correction and duplicate dismissal (a reason is required).
 - **Audit trail.** Every SYSTEM, AI and HUMAN action is recorded with concise structured evidence and no chain-of-thought.
 - **Synthetic benchmark.** 100 generated invoices with a controlled scenario mix.
 
@@ -167,7 +170,7 @@ Presentation              Streamlit UI · FastAPI
     ↓
 Workflow                  APWorkflowService: state machine, orchestration, permissions, audit
     ↓
-AI Services               LLMProvider → Mock (demo) | OpenAI-compatible (any /chat/completions)
+AI Services               LLMProvider → Mock (demo) | Ollama (/api/chat) | OpenAI-compatible (/chat/completions)
     ↓
 Deterministic Services    vendor matching · PO matching · duplicates · exceptions · approvals · validation
     ↓
@@ -193,11 +196,13 @@ Transitions are an explicit whitelist. `VALIDATED → POSTED` is the only edge i
 
 ## The UI
 
-`streamlit run streamlit_app.py`. On first launch the app seeds a local SQLite database (`ap_demo.db`) and processes the 20 demo invoices.
+`streamlit run streamlit_app.py`. On first launch the app seeds a local SQLite database (`ap_demo.db`) and processes the 20 demo invoices with the deterministic mock.
 
 | Page | Shows |
 |---|---|
 | Dashboard | KPIs, exception breakdown, status mix, invoice register, general ledger, benchmark |
+| New Invoice | **Enter details** (vendor, PO, lines, tax; lines pre-fill from the PO), **Upload file** (`.txt` or `.json`, several at once), **Paste text** |
+| Approval Inbox | What's waiting for the selected role, why, and the invoice's route (✅ done · ▶ current · ○ to come). Approve or reject; AP Specialist and Controller also see *Ready to post*. |
 | Invoice Processing | Source document → AI extraction → vendor match → AI coding (confidence, reason) → PO match (ordered / received / invoiced / variance / tolerance) → exceptions → approval route → proposed JE → validation checklist → Approve / Reject / Post |
 | Exception Queue | All exceptions, filterable, with evidence and AI explanation |
 | Audit Trail | Chronological SYSTEM / AI / HUMAN events, filterable by invoice |
@@ -208,8 +213,39 @@ Transitions are an explicit whitelist. `VALIDATED → POSTED` is the only edge i
 | ![Dashboard](docs/screenshots/dashboard.png) | ![Invoice with price exception](docs/screenshots/invoice-price-exception.png) |
 | **Approval route, JE and human actions** | **Architecture** |
 | ![Approval and journal entry](docs/screenshots/invoice-approval-je.png) | ![Architecture](docs/screenshots/architecture.png) |
+| **Approval Inbox (Procurement Manager)** | **New Invoice — enter details** |
+| ![Approval inbox](docs/screenshots/approval-inbox.png) | ![New invoice form](docs/screenshots/new-invoice.png) |
 
-Use **Acting as** in the sidebar to switch between demo users (AP Specialist, Procurement Manager, Department Manager, Controller). Permissions are enforced by the service, not by hiding buttons: try approving as the wrong role, or posting a duplicate.
+Use **Your role** in the sidebar to switch between AP Specialist, Procurement Manager, Department Manager and Controller. Each role can only approve its own steps, and only AP Specialist and Controller can post. Permissions are enforced by the service, not by hiding buttons: try approving as the wrong role, or posting a duplicate.
+
+### Following an invoice through the roles
+
+1. As **AP Specialist**, enter an invoice on **New Invoice**: Brightpath Consulting Group, a new invoice number, PO-5004, and change the hours from 40 to 44. The quantity variance routes it to Procurement, then the Department Manager.
+2. Switch to **Procurement Manager** and open **Approval Inbox**. The route shows `▶ Procurement Manager → ○ Department Manager → ○ Post`. Approve it.
+3. Switch to **Department Manager**. It's now in this inbox with Procurement's approval shown on the route. Approve it (or reject it with a reason).
+4. Switch back to **AP Specialist**. It's under *Ready to post*.
+
+## Running with Ollama
+
+Ollama can run on this machine or on another machine on your network.
+
+1. **On the Ollama machine**, pull a model and make Ollama listen on the network (by default it only accepts local connections):
+   ```bash
+   ollama pull llama3.1                 # or qwen2.5:7b, llama3.2, mistral, …
+   OLLAMA_HOST=0.0.0.0 ollama serve     # macOS app: launchctl setenv OLLAMA_HOST 0.0.0.0, then restart Ollama
+   ```
+   On Windows, set a user environment variable `OLLAMA_HOST=0.0.0.0` and restart Ollama. Allow inbound TCP port 11434 in the firewall.
+2. **Here**, set the host in `.env` (or type it into the sidebar):
+   ```bash
+   AP_LLM_PROVIDER=ollama
+   OLLAMA_BASE_URL=http://192.168.1.50:11434   # the Ollama machine's LAN address
+   OLLAMA_MODEL=llama3.1
+   ```
+3. Start the app. The sidebar shows 🟢 when the host is reachable and the model is installed (it lists the installed models otherwise). New invoices you upload, paste or enter are then read and coded by that model.
+
+How it works: the provider calls Ollama's native `POST /api/chat` with `format` set to a JSON schema (structured outputs, Ollama 0.5+), `stream: false` and temperature 0. The reply is validated against the same Pydantic contracts as every other provider, and then against master data. A local model that invents an account, location or number is caught exactly like any other AI proposal. Only the final answer is read; "thinking" output from reasoning models is never stored.
+
+The 20 demo invoices are always processed with the deterministic mock, so the scripted demo and the scenario runner stay reproducible. Upload the files in `data/invoices/` to see how your model handles them.
 
 ## Configuration
 
@@ -217,8 +253,10 @@ Copy `.env.example` to `.env` to override defaults.
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `AP_LLM_PROVIDER` | `mock` | `mock` or `openai` (any OpenAI-compatible endpoint) |
-| `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `OPENAI_MODEL` | — | LLM mode. Without a key the app falls back to the mock. |
+| `AP_LLM_PROVIDER` | `mock` | `mock`, `ollama`, or `openai` (any OpenAI-compatible endpoint). Also switchable in the sidebar. |
+| `OLLAMA_BASE_URL` / `OLLAMA_MODEL` | `http://localhost:11434` / `llama3.1` | Ollama host (can be another machine on the LAN) and model |
+| `OPENAI_API_KEY` / `OPENAI_BASE_URL` / `OPENAI_MODEL` | — | OpenAI-compatible mode. Without a key the app falls back to the mock. |
+| `AP_LLM_TIMEOUT` | `180` | Seconds to wait for an LLM reply (connecting times out after 10 s) |
 | `AP_PRICE_TOLERANCE_AMOUNT` / `AP_PRICE_TOLERANCE_PERCENT` | `25.00` / `5.0` | Price variance tolerance (lesser of the two) |
 | `AP_QUANTITY_TOLERANCE` | `0` | Units |
 | `AP_CONFIDENCE_STRAIGHT_THROUGH` / `AP_CONFIDENCE_REVIEW` | `0.90` / `0.75` | AI confidence bands |
@@ -228,21 +266,21 @@ Copy `.env.example` to `.env` to override defaults.
 
 ## API
 
-`uvicorn app.api.routes:app --reload`, then open http://localhost:8000/docs. The API exposes the same service as the UI: `POST /invoices`, `POST /invoices/{id}/approve|reject|post|coding`, `GET /exceptions`, `GET /audit`, `GET /metrics`. A blocked post returns `409` with the failed checks. Authentication is out of scope; the demo user is passed by name.
+`uvicorn app.api.routes:app --reload`, then open http://localhost:8000/docs. The API exposes the same service as the UI: `POST /invoices` (document text), `POST /invoices/structured` (invoice fields as JSON), `GET /inbox?user=…` (a role's approval inbox and ready-to-post list), `POST /invoices/{id}/approve|reject|post|coding`, `GET /exceptions`, `GET /audit`, `GET /metrics`. A blocked post returns `409` with the failed checks. Authentication is out of scope; the demo user is passed by name.
 
 ## Project layout
 
 ```text
 app/
   domain/      Pydantic models: invoice, vendor, PO, receipt, accounting, approval, exception, workflow
-  ai/          LLMProvider protocol, deterministic mock provider, OpenAI-compatible provider
+  ai/          LLMProvider protocol, deterministic mock, shared JSON-chat base, Ollama and OpenAI-compatible providers
   services/    extraction, vendor matching, classification, matching, duplicates, exceptions,
                approvals, journal entries, validation, ledger boundary, workflow service, reporting
   db/          SQLAlchemy tables (money stored as TEXT), repository, seed
   api/         FastAPI routes
-data/          master data (vendors, COA, dimensions, periods, POs, receipts, coding history) + 20 invoices
+data/          master data (vendors, COA, dimensions, periods, POs, receipts, coding history), 20 invoices, samples
 demo/          invoice renderer, 20-invoice dataset, scenario runner, synthetic benchmark
-tests/         117 tests
+tests/         134 tests
 docs/          architecture, workflow, accounting controls, demo script
 ```
 
@@ -251,7 +289,9 @@ docs/          architecture, workflow, accounting controls, demo script
 - **Money is `Decimal` end to end.** JSON data is loaded with `parse_float=Decimal`, LLM floats are converted via `str`, SQLite stores amounts as TEXT, and `money()` raises on floats.
 - **Invoice-level coding.** One GL / department / location proposal per invoice, applied to all lines; PO invoices inherit PO line coding. Split coding would be a natural extension.
 - **Ambiguous vendors halt processing.** The only action is rejection; in practice AP would fix the vendor master and resubmit. A "resolve vendor and re-run" action is a natural next step.
-- **The mock provider reads one document layout.** Real OCR / PDF parsing is out of scope. The OpenAI-compatible provider accepts any text.
+- **No OCR yet.** Invoices come in as typed details, JSON, or text. Scanned PDFs and images would need an OCR step in front of extraction. The mock provider reads one text layout; Ollama and OpenAI-compatible models accept any text.
+- **Manually entered invoices skip AI extraction, not the controls.** A person typed the fields, so there's nothing to extract. AI still proposes the coding, and arithmetic, vendor, PO, duplicate, routing and posting controls all run. If the optional "total as printed" doesn't foot, the invoice is flagged.
+- **Rejection is final.** Any role on the route can reject with a reason and the invoice ends as REJECTED; there is no "send back to a previous role" step.
 - **No authentication.** Demo users and roles exist to demonstrate workflow permissions.
 - **Not an ERP.** There is no payments, no vendor onboarding and no multi-currency; the internal ledger is a stand-in behind an explicit boundary.
 

@@ -53,3 +53,25 @@ def test_exception_queue(client):
     queue = client.get("/exceptions").json()
     assert [e["type"] for e in queue] == ["LOW_CODING_CONFIDENCE"]
     assert client.get("/health").json()["status"] == "ok"
+
+
+def test_structured_intake_and_role_inbox(client):
+    invoice = {"vendor_name": "Brightpath Consulting Group", "vendor_tax_id": "36-4567890",
+               "invoice_number": "BCG-0913", "invoice_date": "2026-09-20", "po_number": "PO-5004",
+               "lines": [{"description": "Process improvement consulting (hours)", "quantity": 48,
+                          "unit_price": "150.00"}]}
+    r = client.post("/invoices/structured", json={"user": "Dana Brooks", "invoice": invoice})
+    assert r.status_code == 201
+    body = r.json()
+    assert body["intake"] == "STRUCTURED_UPLOAD" and body["invoice"]["total"] == "7200.00"
+    inv = body["invoice"]["id"]
+
+    assert [i["id"] for i in client.get("/inbox?user=Priya Shah").json()["waiting"]] == [inv]
+    client.post(f"/invoices/{inv}/approve", json={"user": "Priya Shah"})
+    marcus = client.get("/inbox?user=Marcus Lee").json()
+    assert [i["id"] for i in marcus["waiting"]] == [inv] and marcus["ready_to_post"] == []
+    client.post(f"/invoices/{inv}/approve", json={"user": "Marcus Lee"})
+    assert [i["id"] for i in client.get("/inbox?user=Dana Brooks").json()["ready_to_post"]] == [inv]
+
+    bad = client.post("/invoices/structured", json={"user": "Dana Brooks", "invoice": {"vendor_name": "x"}})
+    assert bad.status_code == 422

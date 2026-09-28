@@ -49,12 +49,25 @@ The `LLMProvider` protocol (`app/ai/provider.py`) has exactly four methods:
 | `classify_invoice(invoice, context)` | `ClassificationProposal` | Pydantic schema (confidence 0..1, reason ≤ 500 chars), then `validate_coding` against the chart of accounts and dimensions |
 | `explain_exception(exception)` | `str` (≤ 400 chars) | Display only; never used for decisions |
 
-Two implementations exist:
+Three implementations exist:
 
 - **`MockLLMProvider`** is the default demo mode. It is rule-based and fully deterministic: it parses the synthetic invoice layout, and it derives coding confidence from how strongly the evidence agrees (PO coding > vendor history > vendor default > keywords). This makes the demo reproducible and requires no API key.
-- **`OpenAICompatibleProvider`** works with any `/chat/completions` endpoint that supports JSON mode. It uses `temperature=0` and embeds the Pydantic JSON schema in the prompt. Any non-JSON or schema-invalid response raises `AIProviderError`.
+- **`OllamaProvider`** talks to a local or LAN-hosted model through Ollama's native `POST /api/chat`. It sets `format` to a JSON schema (structured outputs), `stream: false` and temperature 0. Unreachable hosts fail after 10 seconds with a clear message; `check_connection()` (used by the sidebar) confirms the host is reachable and the model is installed.
+- **`OpenAICompatibleProvider`** works with any `/chat/completions` endpoint that supports JSON mode, with `temperature=0`.
 
-Swapping providers is configuration (`AP_LLM_PROVIDER`). Nothing downstream changes.
+The two real backends share `JSONChatProvider` (`app/ai/json_chat.py`): the prompts, the JSON schemas, and validation of every reply against the same Pydantic contracts. They differ only in transport. Any non-JSON or schema-invalid reply raises `AIProviderError`. The one normalization at this boundary is rescaling a percentage confidence (e.g. `95` → `0.95`); anything else malformed is rejected.
+
+Swapping providers is configuration (`AP_LLM_PROVIDER`) or a sidebar choice. Nothing downstream changes.
+
+## Intake paths
+
+| Path | Entry point | AI extraction? | Audit |
+|---|---|---|---|
+| Document text (`.txt` upload, paste, API `POST /invoices`) | `process_document` | Yes, by the selected provider | AI "Invoice extracted" |
+| Manual entry form | `process_structured(intake=MANUAL_ENTRY)` | No — a person typed the fields | HUMAN "Invoice details entered manually" |
+| JSON upload / API `POST /invoices/structured` | `process_structured(intake=STRUCTURED_UPLOAD)` | No | HUMAN "Structured invoice uploaded" |
+
+Structured input is built by `extraction_from_fields`, which computes only *missing* figures (line amount, subtotal, total) and keeps supplied ones. A printed total that doesn't foot is therefore still flagged by the arithmetic check. From vendor identification onward, all three paths run the identical pipeline, including AI coding and every deterministic control. OCR for scanned PDFs and images is not implemented; it would sit in front of `process_document`.
 
 ## The LLM is not the system of record
 

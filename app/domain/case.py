@@ -3,6 +3,8 @@ together with every AI proposal and deterministic result produced along the way.
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 from pydantic import BaseModel, Field
 
 from app.domain.accounting import ClassificationProposal, JournalEntry, ValidationReport
@@ -14,9 +16,17 @@ from app.domain.vendor import VendorMatch
 from app.domain.workflow import StateChange, WorkflowState
 
 
+class IntakeMethod(StrEnum):
+    AI_EXTRACTION = "AI_EXTRACTION"          # document text read by the AI provider
+    MANUAL_ENTRY = "MANUAL_ENTRY"            # details typed in by a user
+    STRUCTURED_UPLOAD = "STRUCTURED_UPLOAD"  # JSON file with invoice fields
+
+
 class InvoiceCase(BaseModel):
     invoice: Invoice
     document: str
+    intake: IntakeMethod = IntakeMethod.AI_EXTRACTION
+    ai_provider: str | None = None  # provider that extracted and/or coded this invoice
     extraction: InvoiceExtraction | None = None
     vendor_match: VendorMatch | None = None
     classification: ClassificationProposal | None = None
